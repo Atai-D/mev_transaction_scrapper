@@ -142,32 +142,66 @@ function delay(time) {
 }
 
 function save_in_db(transaction_info) {
-  // console.log(get_value_by_key(transaction_info, 'Transaction Hash'));
-  // console.log(get_value_by_key(transaction_info, 'Profit'));
-  // console.log(get_value_by_key(transaction_info, 'Cost'));
-  // console.log(get_value_by_key(transaction_info, 'MEV Type'));
-  // console.log(get_value_by_key(transaction_info, 'Time'));
-  // console.log(get_value_by_key(transaction_info, 'Signal Transaction(beta)'));
-  // console.log(get_value_by_key(transaction_info, 'From'));
-  // console.log(get_value_by_key(transaction_info, 'Revenue'));
-  // console.log(get_value_by_key(transaction_info, 'BlockNumber'));
-  // console.log(get_value_by_key(transaction_info, 'Position'));
-  // console.log(get_value_by_key(transaction_info, 'Builder'));
-  const insert = `INSERT INTO mev_transactions(hash, profit, cost, mev_type, time, signal_transaction, from1, contract, revenue, block_number, position, builder) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`;
-  const values = [
-    get_value_by_key(transaction_info, 'Transaction Hash'),
-    get_value_by_key(transaction_info, 'Profit'),
-    get_value_by_key(transaction_info, 'Cost'),
-    get_value_by_key(transaction_info, 'MEV Type'),
-    get_value_by_key(transaction_info, 'Time'),
-    get_value_by_key(transaction_info, 'Signal Transaction(beta)'),
-    get_value_by_key(transaction_info, 'From'),
-    get_value_by_key(transaction_info, 'Contract(To)'),
-    get_value_by_key(transaction_info, 'Revenue'),
-    get_value_by_key(transaction_info, 'BlockNumber'),
-    get_value_by_key(transaction_info, 'Position'),
-    get_value_by_key(transaction_info, 'Builder'),
-  ];
+  let insert;
+  let values;
+  switch (get_value_by_key(transaction_info, 'MEV Type')) {
+    case 'Arbitrage':
+      insert = `INSERT INTO arbitrage(hash, profit, cost, mev_type, time, signal_transaction, from1, contract, revenue, block_number, position, builder) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`;
+      values = [
+        get_value_by_key(transaction_info, 'Transaction Hash'),
+        get_value_by_key(transaction_info, 'Profit'),
+        get_value_by_key(transaction_info, 'Cost'),
+        get_value_by_key(transaction_info, 'MEV Type'),
+        get_value_by_key(transaction_info, 'Time'),
+        get_value_by_key(transaction_info, 'Signal Transaction(beta)'),
+        get_value_by_key(transaction_info, 'From'),
+        get_value_by_key(transaction_info, 'Contract(To)'),
+        get_value_by_key(transaction_info, 'Revenue'),
+        get_value_by_key(transaction_info, 'BlockNumber'),
+        get_value_by_key(transaction_info, 'Position'),
+        get_value_by_key(transaction_info, 'Builder'),
+      ];
+      break;
+    case 'Sandwich':
+      insert = `INSERT INTO sandwich(hash, profit, cost, mev_type, time, from1, contract, revenue, block_number, builder) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`;
+      values = [
+        get_value_by_key(transaction_info, 'MEV ID'),
+        get_value_by_key(transaction_info, 'Profit'),
+        get_value_by_key(transaction_info, 'Cost'),
+        get_value_by_key(transaction_info, 'MEV Type'),
+        get_value_by_key(transaction_info, 'Time'),
+        // get_value_by_key(transaction_info, 'Signal Transaction(beta)'),
+        get_value_by_key(transaction_info, 'From'),
+        get_value_by_key(transaction_info, 'Contract(To)'),
+        get_value_by_key(transaction_info, 'Revenue'),
+        get_value_by_key(transaction_info, 'BlockNumber'),
+        // get_value_by_key(transaction_info, 'Position'),
+        get_value_by_key(transaction_info, 'Builder'),
+      ];
+      break;
+    case 'Liquidation':
+      insert = `INSERT INTO liquidation(hash, profit, cost, mev_type, time, from1, contract, revenue, block_number, builder) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`;
+      values = [
+        get_value_by_key(transaction_info, 'Transaction Hash'),
+        get_value_by_key(transaction_info, 'Profit'),
+        get_value_by_key(transaction_info, 'Cost'),
+        get_value_by_key(transaction_info, 'MEV Type'),
+        get_value_by_key(transaction_info, 'Time'),
+        // get_value_by_key(transaction_info, 'Signal Transaction(beta)'),
+        get_value_by_key(transaction_info, 'From'),
+        get_value_by_key(transaction_info, 'Contract(To)'),
+        get_value_by_key(transaction_info, 'Revenue'),
+        get_value_by_key(transaction_info, 'BlockNumber'),
+        // get_value_by_key(transaction_info, 'Position'),
+        get_value_by_key(transaction_info, 'Builder'),
+      ];
+      break;
+
+    default:
+      bot.sendMessage(`Error in fetching on MEV type: ${transaction_info}`);
+      break;
+  }
+
   // const values = ['value1', 'value2'];
 
   client.query(insert, values, (err, result) => {
