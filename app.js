@@ -224,8 +224,16 @@ function save_in_db(transaction_info) {
 
 function get_value_by_key(objects, key) {
   const value = objects.find((e) => e.key == key).value;
-  if (value[0] == '$' || value[1] == '$') {
-    return value.split('$').join('');
+  if (
+    value[0] == '$' ||
+    value[1] == '$' ||
+    value[0] == '<' ||
+    value[1] == '<'
+  ) {
+    if (value[0] == '<' || value[1] == '<') {
+      console.log('< is spotted');
+    }
+    return value.split('$').join('').split('<').join('');
   } else {
     return value;
   }
