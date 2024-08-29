@@ -43,23 +43,23 @@ const fetch_info = async (new_page, url) => {
       });
     });
 
-    // console.log(url, 'done');
     await new_page.close();
 
     return transaction_info;
   } catch (error) {
     bot.sendMessage(`Error in fetching\ntransaction url: ${url}\n${error}`);
-    console.log(error, '++++++++++++++++++++');
+    await new_page.close();
   }
 };
 
-let browser;
+let browser_listen;
+let browser_fetch;
 
 (async () => {
   await client.connect();
 
-  browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
+  browser_listen = await puppeteer.launch({ headless: false });
+  const page = await browser_listen.newPage();
 
   await page.goto('https://eigenphi.io/mev/ethereum/txr', {
     waitUntil: 'networkidle2',
@@ -67,20 +67,7 @@ let browser;
 
   await page.waitForSelector('tbody > tr > td > a > div > span > div > div');
 
-  // const transaction_urls = await page.evaluate(() => {
-  //   const arr = Array.from(
-  //     document.getElementsByTagName('table')[0].children[2].children
-  //   );
-
-  //   return arr.map((tr) => {
-  //     return {
-  //       tx: tr.children[1].childNodes[0].childNodes[0].childNodes[0].href,
-  //       block: tr.children[2].childNodes[0].href,
-  //     };
-  //   });
-  // });
-
-  // console.log(transaction_urls);
+  browser_fetch = await puppeteer.launch({ headless: false });
 
   page.exposeFunction(
     'puppeteer_mutation_listener',
@@ -115,28 +102,6 @@ let browser;
         return arr;
       }, []);
 
-      // const href = mutationsList.filter(
-      //   (obj, index, self) =>
-      //     self.findIndex((o) => {
-      //       const tr1 = o.addedNodes[0] || o.removedNodes[0];
-      //       const tr2 = obj.addedNodes[0] || obj.removedNodes[0];
-      //       return (
-      //         tr1.children[1].childNodes[0].childNodes[0].childNodes[0].href ===
-      //         tr2.children[1].childNodes[0].childNodes[0].childNodes[0].href
-      //       );
-      //     }) === index
-      // );
-      // .pop();
-
-      // console.log(
-      //   href.addedNodes[0].children[1].childNodes[0].childNodes[0].childNodes[0]
-      //     .href
-      // );
-
-      // const link =
-      //   href.pop().addedNodes[0].children[1].childNodes[0].childNodes[0]
-      //     .childNodes[0].href;
-
       const newArr = finalArr.filter((el) => {
         return el.type == 'added';
       });
@@ -145,35 +110,6 @@ let browser;
         const el = newArr[i];
         puppeteer_mutation_listener(el.href);
       }
-
-      // finalArr.find((el) => el.type == 'added').href;
-
-      // console.log(link.split('/').pop());
-
-      // console.log(href);
-
-      // window.puppeteer_mutation_listener();
-
-      // if (mutation.addedNodes.length > 0) {
-      //   link =
-      //     mutation.addedNodes[0].children[1].childNodes[0].childNodes[0]
-      //       .childNodes[0].href;
-      // } else {
-      //   link =
-      //     mutation.deletedNodes[0].children[1].childNodes[0].childNodes[0]
-      //       .childNodes[0].href;
-      // }
-
-      // mutationsList.reduce([], (mutation, arr) => {
-
-      // });
-      // for (const mutation of mutationsList) {
-      //   if (mutation.addedNodes.length > 0) {
-      //     console.log(mutation);
-      //     const newasd = JSON.stringify(mutation);
-      //     window.puppeteer_mutation_listener(newasd);
-      //   }
-      // }
     });
     observer.observe(target, { childList: true });
   });
@@ -188,7 +124,7 @@ let browser;
 async function puppeteer_mutation_listener(link) {
   // console.log(link.split('/').pop());
 
-  const new_page = await browser.newPage();
+  const new_page = await browser_fetch.newPage();
   const transaction_info = await fetch_info(new_page, link);
 
   if (transaction_info) {
