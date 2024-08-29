@@ -174,13 +174,13 @@ function save_in_db(transaction_info) {
     // console.log(result);
     if (err) {
       console.error('Error inserting data', err);
-    } else {
       bot.sendMessage(
         `Error in saving in db\ntransaction_hash: ${get_value_by_key(
           transaction_info,
           'Transaction Hash'
         )}`
       );
+    } else {
       console.log('Data inserted successfully');
     }
 
