@@ -233,7 +233,7 @@ function get_value_by_key(objects, key) {
     if (value[0] == '<' || value[1] == '<') {
       console.log('< is spotted');
     }
-    return value.split('$').join('').split('<').join('');
+    return value.split('$').join('').split('<').join('').split(',').join('');
   } else {
     return value;
   }
